@@ -204,9 +204,3 @@ A: 修改 `config.json` 中 `allowedExtensions`，如 `[".pdf", ".docx", ".xlsx"
 ## License
 
 [MIT](LICENSE) © 2026 [FatFatYoung](https://github.com/FatFatYoung)
-
-## Author
-
-**FatFatYoung** — [github.com/FatFatYoung](https://github.com/FatFatYoung)
-
-Related projects: [PortPier](https://github.com/FatFatYoung/PortPier) - TCP 端口映射工具
