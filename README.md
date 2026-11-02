@@ -29,9 +29,15 @@ htmlFileAgent.exe
 
 ### 1. 构建
 
+前置条件：安装 [Bun](https://bun.sh)（推荐，零配置）或 Node.js ≥ 18。
+
 ```bash
-# 需要 Bun (https://bun.sh)
-bun build --compile src/htmlFileAgent.js --outfile htmlFileAgent.exe
+# Bun（推荐）
+bun build --compile src/htmlFileAgent.js --outfile dist/htmlFileAgent.exe
+
+# Node.js + pkg（替代方案）
+npm install -g pkg
+pkg src/htmlFileAgent.js --targets node18-win-x64 --output dist/htmlFileAgent.exe
 ```
 
 ### 2. 部署
@@ -204,3 +210,7 @@ A: 修改 `config.json` 中 `allowedExtensions`，如 `[".pdf", ".docx", ".xlsx"
 ## License
 
 [MIT](LICENSE) © 2026 [FatFatYoung](https://github.com/FatFatYoung)
+
+## Author
+
+**FatFatYoung** — [github.com/FatFatYoung](https://github.com/FatFatYoung)
