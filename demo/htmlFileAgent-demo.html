@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>htmlFileAgent 通用演示</title>
+<style>
+  :root {
+    --bg: #f5f7fb; --card: #fff; --line: #e3e8ef;
+    --text: #1f2937; --muted: #6b7280;
+    --brand: #2563eb; --brand-soft: #e8f0ff;
+    --ok: #059669; --err: #dc2626; --warn: #b45309;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 14px/1.6 "Microsoft YaHei", "PingFang SC", "Segoe UI", system-ui, sans-serif;
+  }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 24px 20px 60px; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  h2 { font-size: 15px; margin: 0 0 12px; color: #334155; }
+  .sub { color: var(--muted); font-size: 13px; margin: 0 0 20px; }
+  .card {
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 12px; padding: 16px 18px; margin-bottom: 16px;
+    box-shadow: 0 1px 2px rgba(16,24,40,.05);
+  }
+  .status {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 16px; border-radius: 8px;
+    background: #f8fafc; border: 1px solid var(--line); font-size: 13px;
+  }
+  .status .dot { width: 10px; height: 10px; border-radius: 50%; background: #94a3b8; flex-shrink: 0; }
+  .status.online  .dot { background: var(--ok); }
+  .status.offline .dot { background: var(--err); }
+  .status.checking .dot { background: var(--warn); animation: pulse 1s infinite; }
+  @keyframes pulse { 50% { opacity: .3; } }
+
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }
+  label { font-size: 13px; color: #475569; min-width: 90px; }
+  input, select {
+    height: 34px; padding: 0 10px;
+    border: 1px solid var(--line); border-radius: 6px;
+    font: 13px/1 inherit; background: #fff; outline: none;
+  }
+  input:focus, select:focus {
+    border-color: var(--brand); box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+  }
+  input[type="text"] { flex: 1; min-width: 200px; }
+  button {
+    height: 34px; padding: 0 14px;
+    border: 1px solid var(--line); border-radius: 6px;
+    background: #fff; color: #334155; font: 13px/1 inherit;
+    cursor: pointer; transition: all .15s;
+  }
+  button:hover { border-color: var(--brand); color: var(--brand); }
+  button.primary { background: var(--brand); border-color: var(--brand); color: #fff; }
+  button.primary:hover { background: #1d4ed8; color: #fff; }
+  .hint { font-size: 12px; color: var(--muted); margin: -6px 0 10px; line-height: 1.7; }
+  .hint code { background: #f1f5f9; padding: 1px 5px; border-radius: 3px; font-family: Consolas, monospace; color: #b45309; }
+
+  .log {
+    background: #0f172a; color: #e2e8f0; padding: 12px 14px;
+    border-radius: 8px; font: 12px/1.6 Consolas, monospace;
+    max-height: 320px; overflow-y: auto;
+    white-space: pre-wrap; word-break: break-all;
+  }
+  .log .ln-ok  { color: #34d399; }
+  .log .ln-err { color: #f87171; }
+  .log .ln-dim { color: #64748b; }
+  .log .ln-in  { color: #60a5fa; }
+
+  .toast {
+    position: fixed; left: 50%; bottom: 40px;
+    transform: translateX(-50%) translateY(20px);
+    padding: 12px 20px; border-radius: 8px;
+    background: #334155; color: #fff; font-size: 13px;
+    max-width: 90vw; box-shadow: 0 8px 24px rgba(0,0,0,.2);
+    opacity: 0; pointer-events: none; transition: all .2s; z-index: 9999;
+    white-space: pre-wrap; line-height: 1.6;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast.ok   { background: var(--ok); }
+  .toast.err  { background: var(--err); }
+  .toast.warn { background: var(--warn); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>htmlFileAgent 通用演示</h1>
+  <p class="sub">
+    演示如何从浏览器调用本地 htmlFileAgent 打开任意类型的文件（不限扩展名）。<br>
+    文件类型由系统默认关联决定，可执行文件默认拒绝（可在 config.json 放开）。
+  </p>
+
+  <div id="statusBar" class="status checking">
+    <div class="dot"></div>
+    <span id="statusText">正在探测本地 htmlFileAgent…</span>
+    <span style="flex:1"></span>
+    <button onclick="probeAgent()">重新探测</button>
+    <button onclick="showInfo()">查看 /ping 详情</button>
+  </div>
+
+  <div class="card" style="margin-top:16px;">
+    <h2>① 按 source + 相对路径打开（推荐）</h2>
+    <p class="hint">
+      htmlFileAgent 按 <code>config.json</code> 里 <code>sources.&lt;name&gt;.roots</code> 逐个尝试，找到存在的就打开。<br>
+      页面不需要知道文件在哪台服务器，也不关心文件扩展名。
+    </p>
+    <div class="row">
+      <label>Source</label>
+      <input type="text" id="srcSource" value="default" list="sourceList">
+      <datalist id="sourceList"></datalist>
+    </div>
+    <div class="row">
+      <label>相对路径</label>
+      <input type="text" id="srcPath" placeholder="子目录\任意文件名.任意扩展名">
+    </div>
+    <div class="row">
+      <button class="primary" onclick="openBySource()">打开</button>
+      <button onclick="existsBySource()">仅检查存在</button>
+      <button onclick="revealBySource()">在资源管理器中定位</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>② 按绝对路径打开（兼容旧接口）</h2>
+    <p class="hint">
+      直接给完整路径。htmlFileAgent 会遍历所有 source 的 roots 验证是否在允许范围内。<br>
+      UNC 路径 <code>\\Server\Share\a.docx</code> 或盘符 <code>D:\Docs\b.xlsx</code> 都可以。
+    </p>
+    <div class="row">
+      <label>绝对路径</label>
+      <input type="text" id="absPath" placeholder="UNC 路径或盘符路径">
+    </div>
+    <div class="row">
+      <button class="primary" onclick="openByAbs()">打开</button>
+      <button onclick="existsByAbs()">仅检查存在</button>
+      <button onclick="revealByAbs()">在资源管理器中定位</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>③ 缓存管理（仅 http 来源）</h2>
+    <div class="row">
+      <button onclick="cleanupCache()">清理下载缓存</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>④ 操作日志</h2>
+    <div class="row">
+      <button onclick="clearLog()">清空日志</button>
+    </div>
+    <div id="log" class="log"></div>
+  </div>
+
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+var ENDPOINTS = [
+  'http://127.0.0.1:19000',
+  'https://127.0.0.1:19443'
+];
+var AGENT = null, AGENT_INFO = null;
+
+function logLine(kind, text) {
+  var el = document.getElementById('log');
+  var line = document.createElement('div');
+  line.className = 'ln-' + (kind || 'dim');
+  var ts = new Date().toTimeString().slice(0, 8);
+  line.textContent = '[' + ts + '] ' + text;
+  el.appendChild(line);
+  el.scrollTop = el.scrollHeight;
+}
+function clearLog() { document.getElementById('log').innerHTML = ''; logLine('dim', '日志已清空'); }
+
+var toastTimer = null;
+function toast(msg, kind, ms) {
+  var el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show' + (kind ? ' ' + kind : '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function () {
+    el.className = 'toast' + (kind ? ' ' + kind : '');
+  }, ms || 3000);
+}
+
+function fetchJSON(url, timeoutMs) {
+  var ctl = new AbortController();
+  var t = setTimeout(function () { ctl.abort(); }, timeoutMs || 5000);
+  return fetch(url, { cache: 'no-store', mode: 'cors', signal: ctl.signal })
+    .then(function (r) {
+      clearTimeout(t);
+      return r.text().then(function (txt) {
+        try { return JSON.parse(txt); }
+        catch (e) { throw new Error('响应不是 JSON: ' + txt.slice(0, 120)); }
+      });
+    })
+    .catch(function (e) { clearTimeout(t); throw e; });
+}
+
+function probeAgent() {
+  var bar = document.getElementById('statusBar');
+  var txt = document.getElementById('statusText');
+  bar.className = 'status checking';
+  txt.textContent = '正在探测本地 htmlFileAgent…';
+  logLine('dim', '探测 endpoints: ' + ENDPOINTS.join(' , '));
+
+  var i = 0;
+  (function next() {
+    if (i >= ENDPOINTS.length) {
+      AGENT = null; AGENT_INFO = null;
+      bar.className = 'status offline';
+      txt.textContent = '未检测到本地 htmlFileAgent';
+      logLine('err', '探测失败：所有 endpoint 均无响应');
+      return;
+    }
+    var ep = ENDPOINTS[i++];
+    fetchJSON(ep + '/ping?_=' + Date.now(), 1500)
+      .then(function (j) {
+        if (j && j.ok) {
+          AGENT = ep; AGENT_INFO = j;
+          bar.className = 'status online';
+          txt.textContent = '已连接 ' + ep + '（v' + (j.version || '?') +
+                             ' · 允许所有扩展名: ' + (j.allowAllExtensions ? '是' : '否') + '）';
+          logLine('ok', '探测成功: ' + ep);
+          logLine('dim', 'sources = ' + JSON.stringify(j.sources || []));
+          fillSourceList();
+        } else {
+          next();
+        }
+      })
+      .catch(function (e) {
+        logLine('dim', 'endpoint ' + ep + ' 失败：' + e.message);
+        next();
+      });
+  })();
+}
+
+function fillSourceList() {
+  var dl = document.getElementById('sourceList');
+  dl.innerHTML = '';
+  ((AGENT_INFO && AGENT_INFO.sources) || []).forEach(function (name) {
+    var opt = document.createElement('option');
+    opt.value = name;
+    dl.appendChild(opt);
+  });
+}
+
+function showInfo() {
+  if (!AGENT_INFO) return toast('尚未探测到 htmlFileAgent', 'warn');
+  alert('GET ' + AGENT + '/ping\n\n' + JSON.stringify(AGENT_INFO, null, 2));
+}
+
+function callAgent(op, params) {
+  if (!AGENT) return Promise.reject(new Error('htmlFileAgent 未连接'));
+  var qs = Object.keys(params)
+    .filter(function (k) { return params[k] != null && params[k] !== ''; })
+    .map(function (k) { return encodeURIComponent(k) + '=' + encodeURIComponent(params[k]); })
+    .join('&');
+  var url = AGENT + op + '?' + qs + '&_=' + Date.now();
+  logLine('in', op + ' 请求: ' + url);
+  return fetchJSON(url, 15000).then(function (j) {
+    if (j.ok) logLine('ok', op + ' 成功: ' + JSON.stringify(j));
+    else      logLine('err', op + ' 失败: ' + (j.error || 'unknown'));
+    return j;
+  }).catch(function (e) {
+    logLine('err', op + ' 异常: ' + e.message);
+    throw e;
+  });
+}
+
+function doOpen(params, label) {
+  toast('正在打开' + (label ? ' ' + label : '') + '…', '', 2000);
+  return callAgent('/open', params).then(function (j) {
+    if (j.ok) toast('已发送打开指令：' + (j.path || ''), 'ok', 4000);
+    else     toast('打开失败：' + (j.error || 'unknown'), 'err', 6000);
+  }).catch(function (e) {
+    toast('无法连接 htmlFileAgent：' + e.message, 'err', 6000);
+  });
+}
+function doExists(params, label) {
+  return callAgent('/exists', params).then(function (j) {
+    if (j.ok) toast('文件存在' + (label ? '：' + label : ''), 'ok');
+    else     toast('不存在：' + (j.error || 'unknown'), 'warn', 5000);
+  }).catch(function (e) {
+    toast('检查失败：' + e.message, 'err', 5000);
+  });
+}
+function doReveal(params, label) {
+  return callAgent('/reveal', params).then(function (j) {
+    if (j.ok) toast('已在资源管理器中定位' + (label ? '：' + label : ''), 'ok');
+    else     toast('定位失败：' + (j.error || 'unknown'), 'err', 5000);
+  }).catch(function (e) {
+    toast('无法连接 htmlFileAgent：' + e.message, 'err', 5000);
+  });
+}
+function cleanupCache() {
+  if (!AGENT) return toast('htmlFileAgent 未连接', 'warn');
+  fetchJSON(AGENT + '/cache/clear?_=' + Date.now(), 10000)
+    .then(function (j) {
+      if (j.ok) { toast('缓存已清理', 'ok'); logLine('ok', '/cache/clear 成功'); }
+      else toast('缓存清理失败：' + (j.error || ''), 'err');
+    })
+    .catch(function (e) { toast('缓存清理异常：' + e.message, 'err'); });
+}
+
+function getSrcParams() {
+  return {
+    source: document.getElementById('srcSource').value.trim(),
+    path:   document.getElementById('srcPath').value.trim()
+  };
+}
+function openBySource()   { doOpen(getSrcParams(),   'source=' + getSrcParams().source); }
+function existsBySource() { doExists(getSrcParams(), 'source=' + getSrcParams().source); }
+function revealBySource() { doReveal(getSrcParams(), 'source=' + getSrcParams().source); }
+
+function getAbsParams() { return { path: document.getElementById('absPath').value.trim() }; }
+function openByAbs()   { doOpen(getAbsParams()); }
+function existsByAbs() { doExists(getAbsParams()); }
+function revealByAbs() { doReveal(getAbsParams()); }
+
+probeAgent();
+logLine('dim', '页面已加载 · 协议=' + location.protocol + ' · 主机=' + location.host);
+</script>
+</body>
+</html>
