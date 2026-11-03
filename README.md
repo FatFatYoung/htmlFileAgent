@@ -211,44 +211,44 @@ htmlFileAgent/
 ## 常见问题
 
 **Q: 浏览器提示"未检测到本地 htmlFileAgent"？**
-A: 确认服务已启动（`http://127.0.0.1:19000/ping` 能访问），且浏览器已完全关闭并重新打开。
+- A: 确认服务已启动（`http://127.0.0.1:19000/ping` 能访问），且浏览器已完全关闭并重新打开。
 
 **Q: HTTPS 证书警告？**
-A: 自签名证书会触发浏览器警告，属正常现象。生产环境建议使用正式证书。
+- A: 自签名证书会触发浏览器警告，属正常现象。生产环境建议使用正式证书。
 
 **Q: 如何限制可打开的目录？**
-A: 修改 `config.json` 中 `sources.default.roots`，如 `["D:\\Docs", "\\\\fileserver\\share"]`。
+- A: 修改 `config.json` 中 `sources.default.roots`，如 `["D:\\Docs", "\\\\fileserver\\share"]`。
 
 **Q: 如何限制可打开的文件类型？**
-A: 修改 `config.json` 中 `allowedExtensions`，如 `[".pdf", ".docx", ".xlsx"]`。
+- A: 修改 `config.json` 中 `allowedExtensions`，如 `[".pdf", ".docx", ".xlsx"]`。
 
-**Q: 点击文件没反应，浏览器报 TypeError: Failed to fetch？
-A: 这说明本地服务进程挂掉了。新版 v1.2.0 已加入全局 uncaughtException 捕获机制，正常不会崩溃。请确认是否被企业杀毒软件当作木马拦截了 htmlFileAgent.exe（请加白名单）。
+**Q: 点击文件没反应，浏览器报 TypeError: Failed to fetch？**
+- A: 这说明本地服务进程挂掉了。新版 v1.2.0 已加入全局 uncaughtException 捕获机制，正常不会崩溃。请确认是否被企业杀毒软件当作木马拦截了 htmlFileAgent.exe（请加白名单）。
 
-**Q: HTTPS 页面调用 HTTP 接口被拦截？
-A: 127.0.0.1 属于本地安全上下文，浏览器默认放行。如果遇到拦截，说明客户端配置了代理（如 Clash/V2Ray），请将 127.0.0.1 加入系统代理的 Bypass 列表中。
+**Q: HTTPS 页面调用 HTTP 接口被拦截？**
+- A: 127.0.0.1 属于本地安全上下文，浏览器默认放行。如果遇到拦截，说明客户端配置了代理（如 Clash/V2Ray），请将 127.0.0.1 加入系统代理的 Bypass 列表中。
 
 ## 版本更新
-- **v1.2.0 (Latest)
-新增：主引擎切换为 explorer.exe，完美兼容西里尔文、藏文、特殊符号与超长路径。
+**v1.2.0 (Latest)**
+- 新增：主引擎切换为 explorer.exe，完美兼容西里尔文、藏文、特殊符号与超长路径。
 
-新增：全局防崩溃机制（uncaughtException 捕获），彻底解决因底层的调用异常导致的 TypeError: Failed to fetch 问题。
+- 新增：全局防崩溃机制（uncaughtException 捕获），彻底解决因底层的调用异常导致的 TypeError: Failed to fetch 问题。
 
-优化：加入异步响应并发锁，防止因重复返回响应导致 Node 进程崩溃。
+- 优化：加入异步响应并发锁，防止因重复返回响应导致 Node 进程崩溃。
 
-优化：增加 rundll32 降级方案，确保在极端环境下的高可用性。
+- 优化：增加 rundll32 降级方案，确保在极端环境下的高可用性。
 
-- **v1.1.0
-新增：引入多 sources 配置与 roots 机制，支持多服务器自动寻址。
+**v1.1.0**
+- 新增：引入多 sources 配置与 roots 机制，支持多服务器自动寻址。
 
-新增：动态热加载 config.json，无需重启即可修改配置。
+- 新增：动态热加载 config.json，无需重启即可修改配置。
 
-新增：提供独立的 /exists 和 /reveal 接口。
+- 新增：提供独立的 /exists 和 /reveal 接口。
 
-优化：默认去除扩展名限制，且将可执行文件加入黑名单，提升安全性。
+- 优化：默认去除扩展名限制，且将可执行文件加入黑名单，提升安全性。
 
-- **v1.0.0
-初始发布：基于 rundll32 的局域网文件本地打开器。
+**v1.0.0**
+- 初始发布：基于 rundll32 的局域网文件本地打开器。
 
 ## License
 
