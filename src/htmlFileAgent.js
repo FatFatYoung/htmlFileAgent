@@ -15,6 +15,11 @@ const { promisify } = require('util');
 
 const pipeAsync = promisify(pipeline);
 
+// ★ 防止子进程报错（如杀软拦截）导致整个服务崩溃退出
+process.on('uncaughtException', (err) => {
+  console.error('[防崩溃] 捕获到全局异常:', err);
+});
+
 const HOST        = '127.0.0.1';
 const INSTALL_DIR = 'C:\\htmlFileAgent';
 const EXE_PATH    = path.join(INSTALL_DIR, 'htmlFileAgent.exe');
@@ -24,7 +29,7 @@ const CER_PATH    = path.join(INSTALL_DIR, 'agent.cer');
 const VBS_PATH    = path.join(INSTALL_DIR, 'start.vbs');
 const TASK_NAME   = 'htmlFileAgent';
 const PFX_PASS    = 'htmlfileagent';
-const SERVICE_VER = '3.0';
+const SERVICE_VER = '1.2.0'; // ★ 版本号升级，方便确认是否用上了新版
 
 // ============ 默认配置 ============
 const DEFAULT_CONFIG = {
@@ -258,13 +263,49 @@ async function handleFileOp(op, q, res, cfg) {
   if (op === '/exists') return sendJson(res, 200, { ok: true, exists: true, path: target.displayPath });
 
   if (op === '/open') {
+    // ★ 定义一个安全的返回函数，防止异步/并发异常导致重复响应崩溃
+    let replied = false;
+    const reply = (data) => {
+      if (replied) return;
+      replied = true;
+      sendJson(res, data.ok ? 200 : 500, data);
+    };
+
+    // ★ 第一层尝试：用 explorer.exe 打开（原生宽字符，完美支持藏文）
     try {
-      spawn('rundll32.exe', ['url.dll,FileProtocolHandler', localPath],
-        { windowsHide: true, detached: true, stdio: 'ignore' }).unref();
-      return sendJson(res, 200, { ok: true, path: target.displayPath, local: localPath });
+      const child = spawn('explorer.exe', [localPath], {
+        windowsHide: true, detached: true, stdio: 'ignore'
+      });
+      
+      // ★ 必须监听 error，否则被杀软拦截后 Node 进程会直接崩溃！
+      child.on('error', (err) => {
+        log('explorer 失败，降级 rundll32: ' + err.message);
+        // 如果 explorer 被拦截，自动降级到 rundll32
+        try {
+          const child2 = spawn('rundll32.exe', ['url.dll,FileProtocolHandler', localPath], {
+            windowsHide: true, detached: true, stdio: 'ignore'
+          });
+          child2.on('error', (err2) => {
+            reply({ ok: false, error: '系统拒绝执行打开命令' });
+          });
+          child2.unref();
+          reply({ ok: true, path: target.displayPath, local: localPath, method: 'rundll32-fallback' });
+        } catch (e2) {
+          reply({ ok: false, error: '系统拒绝执行' });
+        }
+      });
+
+      child.unref();
+      
+      // 稍微延迟返回，确保没有触发 error 事件
+      setTimeout(() => {
+        reply({ ok: true, path: target.displayPath, local: localPath, method: 'explorer' });
+      }, 100);
+
     } catch (e) {
-      return sendJson(res, 500, { ok: false, error: 'open failed: ' + e.message });
+      reply({ ok: false, error: 'open failed: ' + e.message });
     }
+    return;
   }
 
   if (op === '/reveal') {
