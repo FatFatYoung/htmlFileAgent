@@ -233,7 +233,7 @@ htmlFileAgent/
 - 新增：open-folder 接口。
 - 优化：/reveal 命令参数。
 
-**v1.2.0 **
+**v1.2.0**
 - 新增：主引擎切换为 explorer.exe，完美兼容西里尔文、藏文、特殊符号与超长路径。
 
 - 新增：全局防崩溃机制（uncaughtException 捕获），彻底解决因底层的调用异常导致的 TypeError: Failed to fetch 问题。
