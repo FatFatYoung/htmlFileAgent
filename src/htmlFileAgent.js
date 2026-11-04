@@ -29,7 +29,7 @@ const CER_PATH    = path.join(INSTALL_DIR, 'agent.cer');
 const VBS_PATH    = path.join(INSTALL_DIR, 'start.vbs');
 const TASK_NAME   = 'htmlFileAgent';
 const PFX_PASS    = 'htmlfileagent';
-const SERVICE_VER = '1.2.0'; // ★ 版本号升级，方便确认是否用上了新版
+const SERVICE_VER = '1.3.0'; // ★ 版本号升级，方便确认是否用上了新版
 
 // ============ 默认配置 ============
 const DEFAULT_CONFIG = {
@@ -229,7 +229,7 @@ function handleRequest(req, res) {
     });
   }
 
-  if (p === '/open' || p === '/exists' || p === '/reveal') {
+  if (p === '/open' || p === '/exists' || p === '/reveal' || p === '/open-folder') {
     return handleFileOp(p, q, res, cfg).catch(err => {
       sendJson(res, 500, { ok: false, error: String(err && err.message || err) });
     });
@@ -310,11 +310,23 @@ async function handleFileOp(op, q, res, cfg) {
 
   if (op === '/reveal') {
     try {
-      spawn('explorer.exe', ['/select,', localPath],
-        { windowsHide: true, detached: true, stdio: 'ignore' }).unref();
+      // 修复：/select, 与路径必须合并为一个参数，否则 UNC 中文路径解析失败
+      spawn('explorer.exe', ['/select,' + localPath],
+        { windowsHide: false, detached: true, stdio: 'ignore' }).unref();
       return sendJson(res, 200, { ok: true });
     } catch (e) {
       return sendJson(res, 500, { ok: false, error: 'reveal failed: ' + e.message });
+    }
+  }
+
+  if (op === '/open-folder') {
+    try {
+      const folderPath = path.win32.dirname(localPath);
+      spawn('explorer.exe', [folderPath],
+        { windowsHide: false, detached: true, stdio: 'ignore' }).unref();
+      return sendJson(res, 200, { ok: true, folder: folderPath });
+    } catch (e) {
+      return sendJson(res, 500, { ok: false, error: 'open folder failed: ' + e.message });
     }
   }
 }
