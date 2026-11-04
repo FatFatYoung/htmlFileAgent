@@ -121,6 +121,7 @@
       <button class="primary" onclick="openBySource()">打开</button>
       <button onclick="existsBySource()">仅检查存在</button>
       <button onclick="revealBySource()">在资源管理器中定位</button>
+      <button onclick="openFolderBySource()">打开所在路径</button>
     </div>
   </div>
 
@@ -138,6 +139,7 @@
       <button class="primary" onclick="openByAbs()">打开</button>
       <button onclick="existsByAbs()">仅检查存在</button>
       <button onclick="revealByAbs()">在资源管理器中定位</button>
+      <button onclick="openFolderByAbs()">打开所在路径</button>
     </div>
   </div>
 
@@ -318,11 +320,29 @@ function getSrcParams() {
 function openBySource()   { doOpen(getSrcParams(),   'source=' + getSrcParams().source); }
 function existsBySource() { doExists(getSrcParams(), 'source=' + getSrcParams().source); }
 function revealBySource() { doReveal(getSrcParams(), 'source=' + getSrcParams().source); }
+function openFolderBySource() {
+  toast('正在打开所在路径…', '', 2000);
+  return callAgent('/open-folder', getSrcParams()).then(function (j) {
+    if (j.ok) toast('已打开所在路径：' + (j.folder || ''), 'ok', 4000);
+    else     toast('打开失败：' + (j.error || 'unknown'), 'err', 6000);
+  }).catch(function (e) {
+    toast('无法连接 htmlFileAgent：' + e.message, 'err', 6000);
+  });
+}
 
 function getAbsParams() { return { path: document.getElementById('absPath').value.trim() }; }
 function openByAbs()   { doOpen(getAbsParams()); }
 function existsByAbs() { doExists(getAbsParams()); }
 function revealByAbs() { doReveal(getAbsParams()); }
+function openFolderByAbs() {
+  toast('正在打开所在路径…', '', 2000);
+  return callAgent('/open-folder', getAbsParams()).then(function (j) {
+    if (j.ok) toast('已打开所在路径：' + (j.folder || ''), 'ok', 4000);
+    else     toast('打开失败：' + (j.error || 'unknown'), 'err', 6000);
+  }).catch(function (e) {
+    toast('无法连接 htmlFileAgent：' + e.message, 'err', 6000);
+  });
+}
 
 probeAgent();
 logLine('dim', '页面已加载 · 协议=' + location.protocol + ' · 主机=' + location.host);
