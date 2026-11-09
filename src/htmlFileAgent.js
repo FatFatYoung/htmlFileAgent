@@ -311,7 +311,7 @@ async function handleFileOp(op, q, res, cfg) {
   if (op === '/reveal') {
     try {
       // 修复：/select, 与路径必须合并为一个参数，否则 UNC 中文路径解析失败
-      spawn('explorer.exe', ['/select,' + localPath],
+      spawn('explorer.exe', ['/select,' , localPath],
         { windowsHide: false, detached: true, stdio: 'ignore' }).unref();
       return sendJson(res, 200, { ok: true });
     } catch (e) {
