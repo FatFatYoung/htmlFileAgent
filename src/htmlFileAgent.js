@@ -29,7 +29,7 @@ const CER_PATH    = path.join(INSTALL_DIR, 'agent.cer');
 const VBS_PATH    = path.join(INSTALL_DIR, 'start.vbs');
 const TASK_NAME   = 'htmlFileAgent';
 const PFX_PASS    = 'htmlfileagent';
-const SERVICE_VER = '1.3.2.0'; // ★ 版本号升级，方便确认是否用上了新版
+const SERVICE_VER = '1.4.0.0'; // ★ 版本号与文件版本一致
 
 // ============ 默认配置 ============
 const DEFAULT_CONFIG = {
@@ -365,6 +365,13 @@ function matchAnyRoot(absPath, roots) {
       continue;
     }
     if (r === '*') return true;
+    // ★ 修复：以 \* 结尾的 pattern 需同时匹配根目录本身
+    if (r.endsWith('\\*')) {
+      const rootDir = r.slice(0, -2);
+      const nl2 = norm.toLowerCase(), rd = rootDir.toLowerCase();
+      if (nl2 === rd || nl2.startsWith(rd + '\\')) return true;
+      continue;
+    }
     const pat = r.endsWith('*') ? r : r + '*';
     if (wildcardToRegex(pat).test(norm)) return true;
   }
