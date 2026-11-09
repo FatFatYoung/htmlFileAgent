@@ -235,7 +235,10 @@ htmlFileAgent/
 
 ## Changelog
 
-**v1.3.0 (Latest)**
+**v1.3.2 (Latest)**
+- Improved: `/reveal` command parameter handling (merged `/select,` and path into a single argument for UNC/Chinese path compatibility).
+  
+**v1.3.0**
 - New: `/open-folder` endpoint (open containing folder without selecting the file).
 - Improved: `/reveal` command parameter handling (merged `/select,` and path into a single argument for UNC/Chinese path compatibility).
 
