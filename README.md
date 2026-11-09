@@ -235,7 +235,11 @@ htmlFileAgent/
 
 ## Changelog
 
-**v1.3.2 (Latest)**
+**v1.4.0 (Latest)**
+- Fixed: Wildcard root matching — `roots: ["path\\*"]` now also matches the root directory itself, not only its subdirectories.
+- Improved: `SERVICE_VER` unified with exe file version for consistent version identification.
+
+**v1.3.2**
 - Improved: `/reveal` command parameter handling (merged `/select,` and path into a single argument for UNC/Chinese path compatibility).
   
 **v1.3.0**
