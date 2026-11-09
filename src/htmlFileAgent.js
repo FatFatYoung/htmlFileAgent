@@ -29,7 +29,7 @@ const CER_PATH    = path.join(INSTALL_DIR, 'agent.cer');
 const VBS_PATH    = path.join(INSTALL_DIR, 'start.vbs');
 const TASK_NAME   = 'htmlFileAgent';
 const PFX_PASS    = 'htmlfileagent';
-const SERVICE_VER = '1.3.0'; // ★ 版本号升级，方便确认是否用上了新版
+const SERVICE_VER = '1.3.2.0'; // ★ 版本号升级，方便确认是否用上了新版
 
 // ============ 默认配置 ============
 const DEFAULT_CONFIG = {
