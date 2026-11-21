@@ -378,7 +378,14 @@ function matchAnyRoot(absPath, roots) {
   return false;
 }
 
+function assertCleanForm(p) {
+  const base = path.win32.basename(String(p || ''));
+  if (/[ .]$/.test(base) || base.indexOf(':') >= 0)
+    throw new Error('invalid path form: ' + base);
+}
+
 async function resolveTarget(q, cfg) {
+  assertCleanForm(q.path);
   if (q.source) {
     const src = cfg.sources[q.source];
     if (!src) throw new Error('unknown source: ' + q.source);
