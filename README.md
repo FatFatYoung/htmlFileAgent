@@ -235,7 +235,10 @@ htmlFileAgent/
 
 ## Changelog
 
-**v1.4.0 (Latest)**
+**v1.4.1 (Latest)**
+- Fixed: File names with trailing dots/spaces or NTFS ADS suffix (e.g. `evil.exe.`, `evil.exe::$DATA`) no longer bypass the executable-extension blacklist; such forms are now rejected as invalid at the path resolver entry.
+
+**v1.4.0**
 - Fixed: Wildcard root matching — `roots: ["path\\*"]` now also matches the root directory itself, not only its subdirectories.
 - Improved: `SERVICE_VER` unified with exe file version for consistent version identification.
 
