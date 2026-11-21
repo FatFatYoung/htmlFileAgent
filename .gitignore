@@ -1,0 +1,31 @@
+# Build output
+*.exe
+dist/
+build/
+
+# Dependencies
+node_modules/
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Logs
+*.log
+
+# Certificates (don't commit secrets!)
+*.pfx
+*.pem
+*.key
+
+# Config with environment variables
+config.local.json
+
+# Cache
+cache/
