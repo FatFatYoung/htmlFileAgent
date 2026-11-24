@@ -52,6 +52,7 @@ const DEFAULT_CONFIG = {
 };
 
 // ============ 入口 ============
+let _cfgCache = null, _cfgMtime = 0;
 const argv = process.argv.slice(2);
 if (argv.includes('--serve'))          runServer();
 else if (argv.includes('--uninstall')) doUninstall();
@@ -61,7 +62,6 @@ else                                   doAuto().catch(e => {
 });
 
 // ============ 配置热加载 ============
-let _cfgCache = null, _cfgMtime = 0;
 function loadConfig() {
   try {
     const st = fs.statSync(CONFIG_PATH);
