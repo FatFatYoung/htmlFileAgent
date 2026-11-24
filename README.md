@@ -235,7 +235,11 @@ htmlFileAgent/
 
 ## Changelog
 
-**v1.4.1 (Latest)**
+**v1.4.2 (Latest)**
+- Fixed: `allowedHosts` is now enforced as a caller whitelist at the request entry (matched by browser Origin host; `null`/unknown origins rejected). Empty list = only localhost may call. HTTP source download host restriction is unchanged.
+- Fixed: `--serve` no longer crashes at startup due to a variable declaration order error.
+
+**v1.4.1**
 - Fixed: File names with trailing dots/spaces or NTFS ADS suffix (e.g. `evil.exe.`, `evil.exe::$DATA`) no longer bypass the executable-extension blacklist; such forms are now rejected as invalid at the path resolver entry.
 
 **v1.4.0**
