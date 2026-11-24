@@ -204,7 +204,27 @@ function runServer() {
 }
 
 function handleRequest(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  const cfg = loadConfig();
+
+  // —— 调用方白名单门禁：兑现 allowedHosts 设计（只有白名单里的才能调用）——
+  // 语义（用户拍板 A）：空名单 = 只放行本机自身（127.0.0.1/localhost/::1，否则配置界面首次进不来），其余全拒。
+  // 判定主机：浏览器跨域看 Origin（'null' 来源直接拒）；无 Origin（curl/同源 GET）看 Host。
+  const origin = String(req.headers.origin || '');
+  let caller = '';
+  if (origin) {
+    if (origin === 'null') return sendJson(res, 403, { ok: false, error: 'caller not allowed' });
+    try { caller = new URL(origin).hostname.toLowerCase(); }
+    catch (e) { return sendJson(res, 403, { ok: false, error: 'caller not allowed' }); }
+  } else {
+    caller = String(req.headers.host || '').toLowerCase().replace(/:\d+$/, '').replace(/^\[|\]$/g, '');
+  }
+  const selfHosts = ['127.0.0.1', 'localhost', '::1'];
+  const callerList = (cfg.allowedHosts || []).map(function (x) { return String(x).toLowerCase(); });
+  if (selfHosts.indexOf(caller) < 0 && callerList.indexOf(caller) < 0) {
+    return sendJson(res, 403, { ok: false, error: 'caller not allowed' });
+  }
+
+  res.setHeader('Access-Control-Allow-Origin', origin || '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Requested-With, Access-Control-Request-Private-Network');
   res.setHeader('Access-Control-Allow-Private-Network', 'true');
@@ -216,7 +236,6 @@ function handleRequest(req, res) {
   catch (e) { return sendJson(res, 400, { ok: false, error: 'bad url' }); }
 
   const p = parsed.pathname, q = parsed.query || {};
-  const cfg = loadConfig();
 
   if (p === '/ping') {
     return sendJson(res, 200, {

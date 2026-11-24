@@ -149,7 +149,7 @@ Edit `C:\htmlFileAgent\config.json`:
 | `sources.*.tryAll` | When true, tries each root in order and opens the first existing file |
 | `allowedExtensions` | Whitelist of allowed extensions, empty array = no restriction |
 | `blockExecutables` | Whether to reject executable files (default true, prevents remote code execution) |
-| `allowedHosts` | Host whitelist for HTTP sources, prevents SSRF attacks |
+| `allowedHosts` | Caller whitelist (browser Origin host; other callers get 403). Empty = only localhost may call. Also restricts HTTP source download hosts (prevents SSRF) |
 
 ### Environment Variables
 
