@@ -5,7 +5,7 @@ await Bun.build({
     windows: {
       title: "htmlFileAgent",
       publisher: "https://github.com/FatFatYoung",
-      version: "1.4.1.0",
+      version: "1.4.2.0",
       copyright: "© 2026 FatFatYoung. All rights reserved.",
     },
   },
